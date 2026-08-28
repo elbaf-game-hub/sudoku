@@ -1,5 +1,11 @@
 name: sudoku
 description: Sudoku — Game Hub module.
+
+# Mobile bundle identifiers
+#   Android: applicationId = com.elbaftech.game_hub.sudoku
+#   iOS:     CFBundleIdentifier = com.elbaftech.game_hub.sudoku
+#   Apply with: ./tool/apply_bundle_ids.sh sudoku
+#
 version: 0.1.0
 publish_to: none
 
