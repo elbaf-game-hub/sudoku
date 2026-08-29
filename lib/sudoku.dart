@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:game_module/game_module.dart';
+library sudoku;
 
-part 'src/sudoku_module.dart';
-part 'src/sudoku_page.dart';
+export 'src/sudoku_module.dart';
+export 'src/sudoku_page.dart';
+export 'src/sudoku_state.dart';

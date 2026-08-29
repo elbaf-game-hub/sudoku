@@ -1,4 +1,7 @@
-part of '../sudoku.dart';
+import 'package:flutter/material.dart';
+import 'package:game_module/game_module.dart';
+
+import 'sudoku_page.dart';
 
 GameModule get sudokuModule => const _SudokuModule();
 
