@@ -235,43 +235,21 @@ class _SudokuPageState extends State<SudokuPage> {
     final digitCounts = _state.board.digitCounts();
 
     return Theme(
-      data: buildGameTheme(Brightness.light),
+      data: buildGameTheme(Brightness.dark),
       child: Scaffold(
+        backgroundColor: const Color(0xFF0B1120),
         appBar: GameAppBar(
           title: 'Sudoku',
           score: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _formatDuration(_state.elapsed),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(width: 12),
+              _buildStatPill('TIME', _formatDuration(_state.elapsed), Colors.cyanAccent),
+              const SizedBox(width: 8),
               if (_state.mistakeMode)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _state.mistakes > 0
-                        ? GameTokens.danger.withAlpha(40)
-                        : Colors.black12,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${_state.mistakes}/${_state.maxMistakes}',
-                    style: TextStyle(
-                      color: _state.mistakes > 0
-                          ? GameTokens.danger
-                          : Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
+                _buildStatPill(
+                  'MISTAKES',
+                  '${_state.mistakes}/${_state.maxMistakes}',
+                  _state.mistakes > 0 ? GameTokens.danger : Colors.white60,
                 ),
             ],
           ),
@@ -290,7 +268,7 @@ class _SudokuPageState extends State<SudokuPage> {
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth: isWide ? 800 : 480,
+                        maxWidth: isWide ? 800 : 460,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -305,13 +283,16 @@ class _SudokuPageState extends State<SudokuPage> {
                               children: [
                                 OutlinedButton.icon(
                                   onPressed: _showDifficultySheet,
-                                  icon: const Icon(Icons.tune, size: 16),
+                                  icon: const Icon(Icons.tune_rounded, size: 16),
                                   label: Text(
                                     _state.board.difficulty.name.toUpperCase(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                     ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Color(0xFF334155)),
                                   ),
                                 ),
                                 if (_state.status == SudokuStatus.won)
@@ -364,6 +345,25 @@ class _SudokuPageState extends State<SudokuPage> {
     );
   }
 
+  Widget _buildStatPill(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(GameTokens.radiusSm),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBoard() {
     final sel = _state.selectedCell;
     final selectedRow = sel?.row;
@@ -372,14 +372,14 @@ class _SudokuPageState extends State<SudokuPage> {
 
     return Container(
       decoration: BoxDecoration(
-        color: GameTokens.surface,
-        border: Border.all(color: Colors.black87, width: 2.0),
-        borderRadius: BorderRadius.circular(GameTokens.radiusSm),
-        boxShadow: const [
+        color: const Color(0xFF030712),
+        border: Border.all(color: const Color(0xFF38BDF8), width: 2.0),
+        borderRadius: BorderRadius.circular(GameTokens.radiusMd),
+        boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -392,9 +392,9 @@ class _SudokuPageState extends State<SudokuPage> {
                   border: Border(
                     bottom: BorderSide(
                       color: (r % 3 == 2 && r != 8)
-                          ? Colors.black87
-                          : Colors.black26,
-                      width: (r % 3 == 2 && r != 8) ? 2.0 : 1.0,
+                          ? const Color(0xFF38BDF8).withValues(alpha: 0.8)
+                          : const Color(0xFF1E293B),
+                      width: (r % 3 == 2 && r != 8) ? 2.0 : 0.8,
                     ),
                   ),
                 ),
@@ -433,24 +433,24 @@ class _SudokuPageState extends State<SudokuPage> {
         (selectedRow ~/ 3 == r ~/ 3) &&
         (selectedCol ~/ 3 == c ~/ 3);
     final isHighlighted = (selectedRow == r || selectedCol == c || isSameBox);
-    final isSameNumber = selectedVal != null && cell.value == selectedVal;
+    final isSameNumber = selectedVal != null && cell.value == selectedVal && cell.value != null;
     final isHintTarget = _state.activeHint != null &&
         _state.activeHint!.row == r &&
         _state.activeHint!.col == c;
 
     Color bgColor = Colors.transparent;
     if (isSelected) {
-      bgColor = const Color(0xFFFFEB80); // yellow selected
+      bgColor = const Color(0xFF2563EB); // Vibrant Blue
     } else if (isHintTarget) {
-      bgColor = const Color(0xFFC8E6C9); // green hint
+      bgColor = const Color(0xFF059669); // Emerald
     } else if (cell.hasError) {
-      bgColor = const Color(0xFFFFCDD2); // red error
+      bgColor = const Color(0xFFEF4444).withValues(alpha: 0.4); // Red
     } else if (isSameNumber) {
-      bgColor = const Color(0xFFD0E1FD); // same number highlight
+      bgColor = const Color(0xFF1E3A8A); // Same Number
     } else if (isHighlighted) {
-      bgColor = const Color(0xFFF0F4FA); // peer highlight
+      bgColor = const Color(0xFF0F172A); // Peer highlight
     } else if (cell.isGiven) {
-      bgColor = const Color(0xFFF9F7F2); // given bg
+      bgColor = const Color(0xFF0B1120); // Given bg
     }
 
     return InkWell(
@@ -461,28 +461,28 @@ class _SudokuPageState extends State<SudokuPage> {
           border: Border(
             right: BorderSide(
               color: (c % 3 == 2 && c != 8)
-                  ? Colors.black87
-                  : Colors.black26,
-              width: (c % 3 == 2 && c != 8) ? 2.0 : 1.0,
+                  ? const Color(0xFF38BDF8).withValues(alpha: 0.8)
+                  : const Color(0xFF1E293B),
+              width: (c % 3 == 2 && c != 8) ? 2.0 : 0.8,
             ),
           ),
         ),
         child: Center(
-          child: _buildCellContent(cell),
+          child: _buildCellContent(cell, isSelected),
         ),
       ),
     );
   }
 
-  Widget _buildCellContent(Cell cell) {
+  Widget _buildCellContent(Cell cell, bool isSelected) {
     if (cell.value != null) {
-      Color textColor = Colors.black87;
+      Color textColor = Colors.white;
       if (cell.hasError) {
-        textColor = GameTokens.danger;
+        textColor = const Color(0xFFF87171);
       } else if (cell.isGiven) {
-        textColor = const Color(0xFF1E293B);
+        textColor = isSelected ? Colors.white : const Color(0xFF94A3B8);
       } else {
-        textColor = GameTokens.primary;
+        textColor = isSelected ? Colors.white : const Color(0xFF38BDF8);
       }
 
       return Text(
@@ -506,10 +506,10 @@ class _SudokuPageState extends State<SudokuPage> {
               Center(
                 child: Text(
                   cell.pencilmarks.contains(d) ? '$d' : '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black54,
+                    color: isSelected ? Colors.white70 : const Color(0xFF64748B),
                     height: 1.0,
                   ),
                 ),
@@ -528,7 +528,7 @@ class _SudokuPageState extends State<SudokuPage> {
       children: [
         IconButton(
           tooltip: 'Undo',
-          icon: const Icon(Icons.undo),
+          icon: const Icon(Icons.undo_rounded),
           onPressed: _state.history.isNotEmpty ? _onUndo : null,
         ),
         IconButton(
@@ -539,7 +539,7 @@ class _SudokuPageState extends State<SudokuPage> {
         FilterChip(
           label: const Text('Pencil (Notes)'),
           avatar: Icon(
-            _state.pencilMode ? Icons.edit : Icons.edit_outlined,
+            _state.pencilMode ? Icons.edit_rounded : Icons.edit_outlined,
             size: 16,
           ),
           selected: _state.pencilMode,
@@ -547,7 +547,7 @@ class _SudokuPageState extends State<SudokuPage> {
         ),
         IconButton(
           tooltip: 'Hint',
-          icon: const Icon(Icons.lightbulb_outline),
+          icon: const Icon(Icons.lightbulb_outline_rounded),
           onPressed: _onGetHint,
         ),
       ],
@@ -579,7 +579,8 @@ class _SudokuPageState extends State<SudokuPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        backgroundColor: isCompleted ? Colors.black12 : GameTokens.surface,
+        side: const BorderSide(color: Color(0xFF1E293B)),
+        backgroundColor: isCompleted ? Colors.transparent : const Color(0xFF0F172A),
       ),
       onPressed: isCompleted ? null : () => _onInputDigit(digit),
       child: Column(
@@ -590,7 +591,7 @@ class _SudokuPageState extends State<SudokuPage> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isCompleted ? Colors.grey : Colors.black87,
+              color: isCompleted ? Colors.white24 : Colors.white,
             ),
           ),
           Text(
@@ -598,7 +599,7 @@ class _SudokuPageState extends State<SudokuPage> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: isCompleted ? Colors.transparent : Colors.black45,
+              color: isCompleted ? Colors.transparent : const Color(0xFF38BDF8),
             ),
           ),
         ],
