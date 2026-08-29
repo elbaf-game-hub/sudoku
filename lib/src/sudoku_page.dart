@@ -241,19 +241,7 @@ class _SudokuPageState extends State<SudokuPage> {
         backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9),
         appBar: GameAppBar(
           title: 'Sudoku',
-          score: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildStatPill('TIME', _formatDuration(_state.elapsed), Colors.cyanAccent),
-              const SizedBox(width: 8),
-              if (_state.mistakeMode)
-                _buildStatPill(
-                  'MISTAKES',
-                  '${_state.mistakes}/${_state.maxMistakes}',
-                  _state.mistakes > 0 ? GameTokens.danger : Colors.white60,
-                ),
-            ],
-          ),
+          score: _buildStatPill('TIME', _formatDuration(_state.elapsed), Colors.cyanAccent),
           onRestart: () => _onNewGame(_state.board.difficulty),
           onSettings: _showDifficultySheet,
         ),
@@ -293,7 +281,9 @@ class _SudokuPageState extends State<SudokuPage> {
                                     ),
                                   ),
                                   style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: Color(0xFF334155)),
+                                    side: BorderSide(
+                                      color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                    ),
                                   ),
                                 ),
                                 if (_state.status == SudokuStatus.won)
@@ -304,6 +294,12 @@ class _SudokuPageState extends State<SudokuPage> {
                                       color: GameTokens.success,
                                       fontSize: 16,
                                     ),
+                                  )
+                                else if (_state.mistakeMode)
+                                  _buildStatPill(
+                                    'MISTAKES',
+                                    '${_state.mistakes}/${_state.maxMistakes}',
+                                    _state.mistakes > 0 ? GameTokens.danger : (isDark ? Colors.white60 : const Color(0xFF64748B)),
                                   ),
                               ],
                             ),
@@ -524,34 +520,93 @@ class _SudokuPageState extends State<SudokuPage> {
   }
 
   Widget _buildActionBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        IconButton(
-          tooltip: 'Undo',
-          icon: const Icon(Icons.undo_rounded),
-          onPressed: _state.history.isNotEmpty ? _onUndo : null,
-        ),
-        IconButton(
-          tooltip: 'Erase',
-          icon: const Icon(Icons.backspace_outlined),
-          onPressed: _onErase,
-        ),
-        FilterChip(
-          label: const Text('Pencil (Notes)'),
-          avatar: Icon(
-            _state.pencilMode ? Icons.edit_rounded : Icons.edit_outlined,
-            size: 16,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildActionItem(
+            icon: Icons.undo_rounded,
+            label: 'Undo',
+            tooltip: 'Undo',
+            onPressed: _state.history.isNotEmpty ? _onUndo : null,
           ),
-          selected: _state.pencilMode,
-          onSelected: (_) => _onTogglePencil(),
+          _buildActionItem(
+            icon: Icons.backspace_outlined,
+            label: 'Erase',
+            tooltip: 'Erase',
+            onPressed: _onErase,
+          ),
+          _buildActionItem(
+            icon: _state.pencilMode ? Icons.edit_rounded : Icons.edit_outlined,
+            label: 'Notes',
+            tooltip: 'Pencil (Notes)',
+            isActive: _state.pencilMode,
+            onPressed: _onTogglePencil,
+          ),
+          _buildActionItem(
+            icon: Icons.lightbulb_outline_rounded,
+            label: 'Hint',
+            tooltip: 'Hint',
+            onPressed: _onGetHint,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required String label,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    bool isActive = false,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onPressed,
+        child: Opacity(
+          opacity: onPressed == null ? 0.4 : 1.0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? GameTokens.primary.withValues(alpha: isDark ? 0.3 : 0.15)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: isActive
+                  ? Border.all(color: GameTokens.primary, width: 1.5)
+                  : null,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: isActive
+                      ? GameTokens.primary
+                      : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                    color: isActive
+                        ? GameTokens.primary
+                        : (isDark ? Colors.white60 : const Color(0xFF64748B)),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        IconButton(
-          tooltip: 'Hint',
-          icon: const Icon(Icons.lightbulb_outline_rounded),
-          onPressed: _onGetHint,
-        ),
-      ],
+      ),
     );
   }
 
@@ -573,37 +628,62 @@ class _SudokuPageState extends State<SudokuPage> {
   Widget _buildDigitButton(int digit, int currentCount) {
     final remaining = 9 - currentCount;
     final isCompleted = remaining <= 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: isCompleted ? null : () => _onInputDigit(digit),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? Colors.transparent
+                : (isDark ? const Color(0xFF0F172A) : Colors.white),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+              width: 1,
+            ),
+            boxShadow: isCompleted
+                ? null
+                : [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$digit',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isCompleted
+                      ? (isDark ? Colors.white24 : const Color(0xFFCBD5E1))
+                      : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                ),
+              ),
+              Text(
+                '$remaining',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isCompleted
+                      ? Colors.transparent
+                      : (isDark ? const Color(0xFF38BDF8) : GameTokens.primary),
+                ),
+              ),
+            ],
+          ),
         ),
-        side: const BorderSide(color: Color(0xFF1E293B)),
-        backgroundColor: isCompleted ? Colors.transparent : const Color(0xFF0F172A),
-      ),
-      onPressed: isCompleted ? null : () => _onInputDigit(digit),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$digit',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isCompleted ? Colors.white24 : Colors.white,
-            ),
-          ),
-          Text(
-            '$remaining',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: isCompleted ? Colors.transparent : const Color(0xFF38BDF8),
-            ),
-          ),
-        ],
       ),
     );
   }
